@@ -1,50 +1,60 @@
-﻿using OrderManagement.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using OrderManagement.Interfaces;
 using OrderManagement.Models;
+using OrderManagement.Data;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace OrderManagement.Repo;
-
-public class OrderRepo:IOrderRepository
+namespace OrderManagement.Repo
 {
-    private readonly List<Order> _orders = new();
-    private int _nextId = 1;
-
-    public async Task<IEnumerable<Order>> GetAllAsync()
+    public class OrderRepo : IOrderRepository
     {
-        return await Task.FromResult(_orders);
-    }
+        private readonly OrderContext _context;
 
-    public async Task<Order> GetByIdAsync(int id)
-    {
-        return await Task.FromResult(_orders.FirstOrDefault(o => o.Id == id));
-    }
-
-    public async Task<Order> CreateAsync(Order order)
-    {
-        order.Id = _nextId++;
-        order.OrderDate = DateTime.UtcNow;
-        _orders.Add(order);
-        return await Task.FromResult(order);
-    }
-
-    public async Task<Order> UpdateAsync(int id, Order order)
-    {
-        var existingOrder = _orders.FirstOrDefault(o => o.Id == id);
-        if (existingOrder != null)
+        public OrderRepo(OrderContext context)
         {
-            existingOrder.CustomerName = order.CustomerName;
-            existingOrder.TotalAmount = order.TotalAmount;
-            existingOrder.Status = order.Status;
+            _context = context;
         }
-        return await Task.FromResult(existingOrder);
-    }
 
-    public async Task DeleteAsync(int id)
-    {
-        var order = _orders.FirstOrDefault(o => o.Id == id);
-        if (order != null)
+        public async Task<IEnumerable<Order>> GetAllAsync()
         {
-            _orders.Remove(order);
+            return await _context.Orders.ToListAsync();
         }
-        await Task.CompletedTask;
+
+        public async Task<Order> GetByIdAsync(int id)
+        {
+            return await _context.Orders.FindAsync(id);
+        }
+
+        public async Task<Order> CreateAsync(Order order)
+        {
+            order.OrderDate = DateTime.UtcNow;
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+            return order;
+        }
+
+        public async Task<Order> UpdateAsync(int id, Order order)
+        {
+            var existingOrder = await _context.Orders.FindAsync(id);
+            if (existingOrder != null)
+            {
+                existingOrder.CustomerName = order.CustomerName;
+                existingOrder.TotalAmount = order.TotalAmount;
+                existingOrder.Status = order.Status;
+                await _context.SaveChangesAsync();
+            }
+            return existingOrder;
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            var order = await _context.Orders.FindAsync(id);
+            if (order != null)
+            {
+                _context.Orders.Remove(order);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

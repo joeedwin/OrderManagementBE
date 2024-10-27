@@ -49,10 +49,10 @@ public class OrderController : ControllerBase
         return Ok(order);
     }
 
-   /* [HttpDelete("{id}")]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteOrder(int id)
     {
         await _orderService.DeleteOrderAsync(id);
         return NoContent();
-    } */
+    } 
 }

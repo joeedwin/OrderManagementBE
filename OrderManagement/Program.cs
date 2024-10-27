@@ -1,11 +1,16 @@
 using OrderManagement.Services;
 using OrderManagement.Interfaces;
 using OrderManagement.Repo;
+using Microsoft.EntityFrameworkCore;
+using OrderManagement.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<OrderContext>(options =>
+    options.UseSqlite("Data Source=ordermanagement.db"));
 
 
 
@@ -13,7 +18,7 @@ builder.Services.AddSwaggerGen();
 
 
 // Register services
-builder.Services.AddSingleton<IOrderRepository, OrderRepo>();
+builder.Services.AddScoped<IOrderRepository, OrderRepo>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddCors(options =>
 {
@@ -26,6 +31,12 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<OrderContext>();
+    context.Database.EnsureCreated();
+}
 
 if (app.Environment.IsDevelopment())
 {

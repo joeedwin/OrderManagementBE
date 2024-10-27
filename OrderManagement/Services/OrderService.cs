@@ -46,9 +46,10 @@ public class OrderService : IOrderService
         return await _orderRepository.UpdateAsync(id, order);
     }
 
-     /* public async Task<Order> DeleteOrderAsync(int id)
+      public async Task DeleteOrderAsync(int id)
     {
         await _orderRepository.DeleteAsync(id);
-        return null;
-    }*/
+        return;
+        //return null;
+    }
 }
